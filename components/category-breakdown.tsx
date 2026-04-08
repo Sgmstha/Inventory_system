@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { PieChart } from "lucide-react"
 import { formatNPR } from "@/lib/utils"
 
 export async function CategoryBreakdown() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const { data: items } = await supabase.from("inventory_items").select("category, quantity, unit_cost")
 

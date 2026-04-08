@@ -31,7 +31,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/utils/supabase/client"
 import { useRouter } from "next/navigation"
 
 type Item = {

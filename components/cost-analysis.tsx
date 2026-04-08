@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { DollarSign } from "lucide-react"
 import { formatNPR } from "@/lib/utils"
 
 export async function CostAnalysis() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   // Get usage history with item costs
   const { data: usageWithCosts } = await supabase

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
@@ -6,7 +7,7 @@ import { InventoryActions } from "@/components/inventory-actions"
 import { formatNPR } from "@/lib/utils/currency"
 
 export async function InventoryTable({ isAdmin }: { isAdmin: boolean }) {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const { data: items } = await supabase.from("inventory_items").select("*").order("category").order("name")
 

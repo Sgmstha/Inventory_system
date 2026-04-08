@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
 import { InventoryForm } from "@/components/inventory-form"
 
 export default async function EditInventoryPage({ params }: { params: Promise<{ id: string }> }) {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const {
     data: { user },

@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
 import { InventoryTable } from "@/components/inventory-table"
@@ -7,7 +8,7 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 
 export default async function InventoryPage() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const {
     data: { user },

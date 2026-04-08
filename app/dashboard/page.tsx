@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
 import { DashboardStats } from "@/components/dashboard-stats"
@@ -7,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { UsageTrendsChart } from "@/components/usage-trends-chart"
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const {
     data: { user },

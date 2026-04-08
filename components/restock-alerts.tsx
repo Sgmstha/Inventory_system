@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
 
 export async function RestockAlerts() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const { data: recommendations } = await supabase
     .from("restock_recommendations")

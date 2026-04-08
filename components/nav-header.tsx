@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { AuthStatus } from "@/components/auth-status"
 import { Package, BarChart3, ClipboardList } from "lucide-react"
 import Link from "next/link"
@@ -10,7 +11,7 @@ type NavHeaderProps = {
 }
 
 export async function NavHeader({ userEmail, activePage }: NavHeaderProps) {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
   const {
     data: { user },
   } = await supabase.auth.getUser()

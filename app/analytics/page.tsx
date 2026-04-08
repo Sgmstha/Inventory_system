@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
 import { CategoryBreakdown } from "@/components/category-breakdown"
@@ -9,7 +10,7 @@ import { RestockRecommendations } from "@/components/restock-recommendations"
 import { RestockAlgorithmExplainer } from "@/components/restock-algorithm-explainer"
 
 export default async function AnalyticsPage() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const {
     data: { user },

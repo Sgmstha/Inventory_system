@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { TrendingUp } from "lucide-react"
 
 export async function UsageTrendsChart() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   // Get usage data for the last 7 days
   const { data: usageData } = await supabase

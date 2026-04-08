@@ -1,10 +1,12 @@
 import { generateRecommendations } from "@/lib/restock-engine"
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST() {
   try {
-    const supabase = await createClient()
+    const cookieStore = await cookies()
+    const supabase = createClient(cookieStore)
 
     // Check if user is authenticated
     const {
@@ -16,7 +18,7 @@ export async function POST() {
     }
 
     // Generate recommendations
-    const recommendations = await generateRecommendations()
+    const recommendations = await generateRecommendations(cookieStore)
 
     return NextResponse.json({
       success: true,

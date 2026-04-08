@@ -1,10 +1,11 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, AlertTriangle, TrendingDown, DollarSign } from "lucide-react"
 import { formatNPRCompact } from "@/lib/utils/currency"
 
 export async function DashboardStats() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   const [{ count: totalItems }, { data: allItems }, { data: recommendations }] = await Promise.all([
     supabase.from("inventory_items").select("*", { count: "exact", head: true }),

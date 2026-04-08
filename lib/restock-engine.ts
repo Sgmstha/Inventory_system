@@ -1,4 +1,7 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
+
+type CookieStore = Awaited<ReturnType<typeof cookies>>
 
 type UsagePattern = {
   itemId: string
@@ -13,8 +16,8 @@ type UsagePattern = {
   daysUntilStockout: number
 }
 
-export async function analyzeInventory() {
-  const supabase = await createClient()
+export async function analyzeInventory(cookieStore?: CookieStore) {
+  const supabase = createClient(cookieStore || await cookies())
 
   // Get all inventory items
   const { data: items } = await supabase.from("inventory_items").select("*")
@@ -76,9 +79,10 @@ export async function analyzeInventory() {
   return patterns
 }
 
-export async function generateRecommendations() {
-  const patterns = await analyzeInventory()
-  const supabase = await createClient()
+export async function generateRecommendations(cookieStore?: CookieStore) {
+  const finalCookies = cookieStore || await cookies()
+  const patterns = await analyzeInventory(finalCookies)
+  const supabase = createClient(finalCookies)
 
   // Clear old pending recommendations
   await supabase.from("restock_recommendations").delete().eq("status", "pending")

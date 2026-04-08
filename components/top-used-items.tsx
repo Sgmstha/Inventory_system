@@ -1,9 +1,10 @@
-import { createClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/utils/supabase/server"
+import { cookies } from "next/headers"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Flame } from "lucide-react"
 
 export async function TopUsedItems() {
-  const supabase = await createClient()
+  const supabase = createClient(await cookies())
 
   // Get top 5 most used items in the last 30 days
   const { data: usageData } = await supabase
