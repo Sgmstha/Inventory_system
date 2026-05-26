@@ -21,13 +21,22 @@ type InventoryFormProps = {
 const CATEGORIES = ["Housekeeping", "Food & Beverage", "Front Desk", "Office", "Maintenance", "Other"]
 const UNITS = [
   "pieces",
+  "kg",
+  "g",
+  "lbs",
+  "oz",
+  "liters",
+  "ml",
   "boxes",
+  "packs",
   "bottles",
   "rolls",
   "gallons",
-  "lbs",
-  "dozen",
   "bags",
+  "dozen",
+  "sets",
+  "trays",
+  "cartons",
   "reams",
   "cartridges",
   "filters",
@@ -51,6 +60,7 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
     unit_cost: item?.unit_cost?.toString() || "",
     supplier: item?.supplier || "",
     location: item?.location || "",
+    lead_time_days: item?.lead_time_days?.toString() || "7",
   })
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,20 +75,58 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
       return
     }
 
-    const data = {
+    const quantityValue = Number.parseInt(formData.quantity)
+    const reorderPointValue = Number.parseInt(formData.reorder_point)
+    const reorderQuantityValue = Number.parseInt(formData.reorder_quantity)
+    const unitCostValue = Number.parseFloat(formData.unit_cost)
+    const leadTimeValue = Number.parseInt(formData.lead_time_days)
+
+    const validateNonNegative = (value: number, field: string) => {
+      if (Number.isNaN(value) || value < 0) {
+        setError(`${field} must be a number greater than or equal to 0`)
+        setLoading(false)
+        return false
+      }
+      return true
+    }
+
+    if (
+      !validateNonNegative(quantityValue, "Quantity") ||
+      !validateNonNegative(reorderPointValue, "Reorder point") ||
+      !validateNonNegative(reorderQuantityValue, "Reorder quantity") ||
+      !validateNonNegative(unitCostValue, "Unit cost") ||
+      !validateNonNegative(leadTimeValue, "Lead time")
+    ) {
+      return
+    }
+
+    const baseData = {
       name: formData.name,
       category: formData.category,
-      quantity: Number.parseInt(formData.quantity) || 0,
+      quantity: quantityValue,
       unit: formData.unit,
-      reorder_point: Number.parseInt(formData.reorder_point) || 0,
-      reorder_quantity: Number.parseInt(formData.reorder_quantity) || 0,
-      unit_cost: Number.parseFloat(formData.unit_cost) || 0,
+      reorder_point: reorderPointValue,
+      reorder_quantity: reorderQuantityValue,
+      unit_cost: unitCostValue,
       supplier: formData.supplier || null,
       location: formData.location || null,
     }
 
+    const dataWithLeadTime = {
+      ...baseData,
+      lead_time_days: leadTimeValue,
+    }
+
+    const shouldRetryWithoutLeadTime = (message: string | undefined) =>
+      !!message && message.toLowerCase().includes("lead_time_days")
+
     if (mode === "create") {
-      const { error: insertError } = await supabase.from("inventory_items").insert(data)
+      let { error: insertError } = await supabase.from("inventory_items").insert(dataWithLeadTime)
+
+      if (insertError && shouldRetryWithoutLeadTime(insertError.message)) {
+        const { error: retryError } = await supabase.from("inventory_items").insert(baseData)
+        insertError = retryError
+      }
 
       if (insertError) {
         setError(insertError.message)
@@ -86,7 +134,12 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
         return
       }
     } else {
-      const { error: updateError } = await supabase.from("inventory_items").update(data).eq("id", item.id)
+      let { error: updateError } = await supabase.from("inventory_items").update(dataWithLeadTime).eq("id", item.id)
+
+      if (updateError && shouldRetryWithoutLeadTime(updateError.message)) {
+        const { error: retryError } = await supabase.from("inventory_items").update(baseData).eq("id", item.id)
+        updateError = retryError
+      }
 
       if (updateError) {
         setError(updateError.message)
@@ -221,6 +274,19 @@ export function InventoryForm({ mode, item }: InventoryFormProps) {
                 placeholder="e.g., 950.00"
               />
               <p className="text-xs text-muted-foreground">Cost per unit in Nepalese Rupees</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lead_time_days">Lead Time (days)</Label>
+              <Input
+                id="lead_time_days"
+                type="number"
+                min="1"
+                value={formData.lead_time_days}
+                onChange={(e) => setFormData({ ...formData, lead_time_days: e.target.value })}
+                placeholder="e.g., 7"
+              />
+              <p className="text-xs text-muted-foreground">Expected supplier lead time for this item</p>
             </div>
 
             <div className="space-y-2">

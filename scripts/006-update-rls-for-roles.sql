@@ -69,7 +69,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Create function to prevent over-usage before insert
+CREATE OR REPLACE FUNCTION public.prevent_overusage()
+RETURNS TRIGGER AS $$
+DECLARE
+  current_quantity INTEGER;
+BEGIN
+  SELECT quantity INTO current_quantity
+  FROM inventory_items
+  WHERE id = NEW.item_id;
+
+  IF current_quantity IS NULL THEN
+    RAISE EXCEPTION 'Inventory item not found';
+  ELSIF NEW.quantity_used <= 0 THEN
+    RAISE EXCEPTION 'Usage quantity must be greater than 0';
+  ELSIF NEW.quantity_used > current_quantity THEN
+    RAISE EXCEPTION 'Cannot record usage of % because only % are in stock', NEW.quantity_used, current_quantity;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Create trigger for usage history
+DROP TRIGGER IF EXISTS before_usage_recorded ON usage_history;
+CREATE TRIGGER before_usage_recorded
+  BEFORE INSERT ON usage_history
+  FOR EACH ROW
+  EXECUTE FUNCTION public.prevent_overusage();
+
 DROP TRIGGER IF EXISTS on_usage_recorded ON usage_history;
 CREATE TRIGGER on_usage_recorded
   AFTER INSERT ON usage_history

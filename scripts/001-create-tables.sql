@@ -6,13 +6,14 @@ CREATE TABLE inventory_items (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   category VARCHAR(100) NOT NULL,
-  quantity INTEGER NOT NULL DEFAULT 0,
+  quantity INTEGER NOT NULL DEFAULT 0 CHECK (quantity >= 0),
   unit VARCHAR(50) NOT NULL,
   reorder_point INTEGER NOT NULL,
   reorder_quantity INTEGER NOT NULL,
   unit_cost DECIMAL(10, 2) NOT NULL DEFAULT 0,
   supplier VARCHAR(255),
   location VARCHAR(100),
+  lead_time_days INTEGER NOT NULL DEFAULT 7,
   last_restocked_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -22,7 +23,7 @@ CREATE TABLE inventory_items (
 CREATE TABLE usage_history (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   item_id UUID NOT NULL REFERENCES inventory_items(id) ON DELETE CASCADE,
-  quantity_used INTEGER NOT NULL,
+  quantity_used INTEGER NOT NULL CHECK (quantity_used > 0),
   date DATE NOT NULL,
   notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -36,6 +37,7 @@ CREATE TABLE restock_recommendations (
   urgency VARCHAR(20) NOT NULL CHECK (urgency IN ('low', 'medium', 'high', 'critical')),
   predicted_stockout_date DATE,
   reason TEXT,
+  prediction_confidence VARCHAR(20) NOT NULL DEFAULT 'INSUFFICIENT DATA' CHECK (prediction_confidence IN ('INSUFFICIENT DATA', 'LOW', 'MEDIUM', 'HIGH')),
   status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'ordered', 'dismissed')),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

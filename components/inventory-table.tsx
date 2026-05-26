@@ -41,14 +41,15 @@ export async function InventoryTable({ isAdmin }: { isAdmin: boolean }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items?.map((item) => {
-                const status = getStockStatus(item.quantity, item.reorder_point)
+              {items?.map((item: any) => {
+                const safeQuantity = Math.max(0, item.quantity)
+                const status = getStockStatus(safeQuantity, item.reorder_point)
                 return (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>{item.category}</TableCell>
                     <TableCell>
-                      {item.quantity} {item.unit}
+                      {safeQuantity} {item.unit}
                     </TableCell>
                     <TableCell>
                       <Badge variant={status.variant}>{status.label}</Badge>

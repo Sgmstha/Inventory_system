@@ -1,24 +1,22 @@
-import { createClient } from "@/lib/utils/supabase/server"
+import { getServerAuth } from "@/lib/utils/supabase/server"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
-import { CategoryBreakdown } from "@/components/category-breakdown"
-import { TopUsedItems } from "@/components/top-used-items"
-import { CostAnalysis } from "@/components/cost-analysis"
 import { RestockEngineTrigger } from "@/components/restock-engine-trigger"
 import { RestockRecommendations } from "@/components/restock-recommendations"
 import { RestockAlgorithmExplainer } from "@/components/restock-algorithm-explainer"
 
 export default async function AnalyticsPage() {
-  const supabase = createClient(await cookies())
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
 
   if (!user) {
     redirect("/login")
   }
+
+  let userRole = "staff"
+  const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
+  userRole = profile?.role || "staff"
 
   return (
     <div className="min-h-screen bg-background">
@@ -33,14 +31,8 @@ export default async function AnalyticsPage() {
 
           <RestockEngineTrigger />
           <RestockRecommendations />
-          <RestockAlgorithmExplainer />
+          <RestockAlgorithmExplainer userRole={userRole} />
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <CategoryBreakdown />
-            <CostAnalysis />
-          </div>
-
-          <TopUsedItems />
         </div>
       </main>
     </div>

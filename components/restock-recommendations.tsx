@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle, TrendingDown, Clock } from "lucide-react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { InventoryItemWmaDetails } from "@/components/inventory-item-wma"
 
 export async function RestockRecommendations() {
   const supabase = createClient(await cookies())
@@ -13,13 +14,23 @@ export async function RestockRecommendations() {
     .select(
       `
       *,
-      item:inventory_items(name, category, quantity, unit, reorder_point)
+      item:inventory_items(id, name, category, quantity, unit, reorder_point)
     `,
     )
     .eq("status", "pending")
-    .order("urgency", { ascending: false })
 
-  if (!recommendations || recommendations.length === 0) {
+  const sortedRecommendations = (recommendations || []).sort((a: any, b: any) => {
+    const rank: Record<string, number> = {
+      critical: 0,
+      high: 1,
+      medium: 2,
+      low: 3,
+    }
+
+    return (rank[a.urgency] ?? 4) - (rank[b.urgency] ?? 4)
+  })
+
+  if (!sortedRecommendations || sortedRecommendations.length === 0) {
     return (
       <Card>
         <CardHeader>
@@ -54,6 +65,27 @@ export async function RestockRecommendations() {
     low: "🟢",
   }
 
+  const formatPredictedStockout = (dateString: string | null) => {
+    if (!dateString) {
+      return "Forecast unavailable"
+    }
+
+    const targetDate = new Date(dateString)
+    const today = new Date()
+    const diffDays = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+
+    if (diffDays <= 0) {
+      return "Out of stock"
+    }
+
+    if (diffDays <= 7) {
+      return `less than ${diffDays} days`
+    }
+
+    const weeks = Math.ceil(diffDays / 7)
+    return `${weeks} week${weeks === 1 ? "" : "s"} remaining`
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -73,45 +105,47 @@ export async function RestockRecommendations() {
                 <TableHead>Item</TableHead>
                 <TableHead>Category</TableHead>
                 <TableHead>Current Stock</TableHead>
-                <TableHead>Recommended</TableHead>
+                <TableHead>Reorder Point</TableHead>
+                <TableHead>Recommended Reorder Quantity</TableHead>
                 <TableHead>Urgency</TableHead>
                 <TableHead>Predicted Stockout</TableHead>
                 <TableHead>Reason</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {recommendations.map((rec: any) => (
-                <TableRow key={rec.id}>
-                  <TableCell className="font-medium">{rec.item.name}</TableCell>
-                  <TableCell>{rec.item.category}</TableCell>
-                  <TableCell>
-                    {rec.item.quantity} {rec.item.unit}
-                  </TableCell>
-                  <TableCell className="font-medium text-blue-600">
-                    {rec.recommended_quantity} {rec.item.unit}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={urgencyColors[rec.urgency as keyof typeof urgencyColors]}>
-                      {urgencyIcons[rec.urgency as keyof typeof urgencyIcons]} {rec.urgency.toUpperCase()}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {rec.predicted_stockout_date ? (
+              {sortedRecommendations.map((rec: any) => {
+                const itemId = rec.item_id ?? rec.item?.id ?? rec.item?.name
+                const itemName = rec.item?.name ?? rec.item_name ?? "Unknown item"
+                return (
+                  <TableRow key={rec.id}>
+                    <TableCell className="font-medium">
+                      <InventoryItemWmaDetails itemId={itemId} itemName={itemName} />
+                    </TableCell>
+                    <TableCell>{rec.item?.category ?? rec.category}</TableCell>
+                    <TableCell>
+                      {rec.item?.quantity ?? rec.quantity} {rec.item?.unit ?? rec.unit}
+                    </TableCell>
+                    <TableCell>
+                      {rec.dynamic_reorder_point ?? rec.item.reorder_point} {rec.item.unit}
+                    </TableCell>
+                    <TableCell className="font-medium text-blue-600">
+                      {rec.recommended_reorder_quantity ?? rec.recommended_quantity} {rec.item.unit}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={urgencyColors[rec.urgency as keyof typeof urgencyColors]}>
+                        {urgencyIcons[rec.urgency as keyof typeof urgencyIcons]} {rec.urgency.toUpperCase()}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
                       <div className="flex items-center gap-1 text-sm">
                         <Clock className="h-3 w-3" />
-                        {new Date(rec.predicted_stockout_date).toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        })}
+                        {formatPredictedStockout(rec.predicted_stockout_date)}
                       </div>
-                    ) : (
-                      <span className="text-muted-foreground text-sm">-</span>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground max-w-xs">{rec.reason}</TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground max-w-xs">{rec.reason}</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>

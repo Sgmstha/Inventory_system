@@ -1,17 +1,12 @@
 import { generateRecommendations } from "@/lib/restock-engine"
-import { createClient } from "@/lib/utils/supabase/server"
+import { getServerAuth } from "@/lib/utils/supabase/server"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 
 export async function POST() {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient(cookieStore)
-
-    // Check if user is authenticated
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
+    const { supabase, data: { user } } = await getServerAuth(cookieStore)
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })

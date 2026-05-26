@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/utils/supabase/server"
+import { getServerAuth } from "@/lib/utils/supabase/server"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { NavHeader } from "@/components/nav-header"
@@ -8,11 +8,8 @@ import { Plus } from "lucide-react"
 import Link from "next/link"
 
 export default async function InventoryPage() {
-  const supabase = createClient(await cookies())
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
 
   if (!user) {
     redirect("/login")

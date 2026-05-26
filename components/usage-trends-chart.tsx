@@ -6,11 +6,11 @@ import { TrendingUp } from "lucide-react"
 export async function UsageTrendsChart() {
   const supabase = createClient(await cookies())
 
-  // Get usage data for the last 7 days
+  // Get usage data for the last 30 days
   const { data: usageData } = await supabase
     .from("usage_history")
     .select("date, quantity_used")
-    .gte("date", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
+    .gte("date", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0])
     .order("date", { ascending: true })
 
   // Aggregate by date
@@ -31,7 +31,7 @@ export async function UsageTrendsChart() {
           <TrendingUp className="h-5 w-5 text-blue-600" />
           <CardTitle>Usage Trends</CardTitle>
         </div>
-        <CardDescription>Daily consumption over the last 7 days</CardDescription>
+        <CardDescription>Daily consumption over the last 30 days</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

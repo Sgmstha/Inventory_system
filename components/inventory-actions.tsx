@@ -48,16 +48,52 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
   const [quantity, setQuantity] = useState("")
   const [notes, setNotes] = useState("")
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSubmit = async () => {
+    const supabase = createClient()
     setLoading(true)
+    setError("")
     const qty = Number.parseInt(quantity)
     if (isNaN(qty) || qty <= 0) {
+      setError("Please enter a valid quantity greater than 0")
       setLoading(false)
       return
     }
+
+    let currentQuantity = item.quantity
+
+    if (action === "remove") {
+      const { data, error: fetchError } = await supabase
+        .from("inventory_items")
+        .select("quantity")
+        .eq("id", item.id)
+        .single()
+
+      if (fetchError || !data) {
+        setError("Unable to verify current stock. Please try again.")
+        setLoading(false)
+        return
+      }
+
+      currentQuantity = Math.max(0, data.quantity)
+      if (currentQuantity <= 0) {
+        setError("Cannot record usage because there is no stock available.")
+        setLoading(false)
+        return
+      }
+
+      if (qty > currentQuantity) {
+        setError(
+          `Cannot record usage of ${qty} ${item.unit}. Only ${currentQuantity} ${item.unit} available in stock.`
+        )
+        setLoading(false)
+        return
+      }
+    }
+
+    let dbError = null
 
     if (action === "add") {
       const { error } = await supabase.from("restock_history").insert({
@@ -67,8 +103,10 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
         notes: notes || null,
       })
 
+      dbError = error
       if (error) {
         console.error("[inventory] Restock error:", error)
+        setError("Failed to record restock. Please try again.")
       }
     } else {
       const { error } = await supabase.from("usage_history").insert({
@@ -78,20 +116,25 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
         notes: notes || null,
       })
 
+      dbError = error
       if (error) {
         console.error("[inventory] Usage error:", error)
+        setError("Failed to record usage. Please try again.")
       }
     }
 
+    if (!dbError) {
+      setOpen(false)
+      setQuantity("")
+      setNotes("")
+      router.refresh()
+    }
     setLoading(false)
-    setOpen(false)
-    setQuantity("")
-    setNotes("")
-    router.refresh()
   }
 
   const handleDelete = async () => {
     setLoading(true)
+    const supabase = createClient()
     const { error } = await supabase.from("inventory_items").delete().eq("id", item.id)
 
     if (error) {
@@ -105,7 +148,14 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(open) => {
+        setOpen(open)
+        if (!open) {
+          setError("")
+          setQuantity("")
+          setNotes("")
+        }
+      }}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm">
@@ -117,6 +167,7 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
               <DropdownMenuItem
                 onSelect={() => {
                   setAction("add")
+                  setError("")
                   setOpen(true)
                 }}
               >
@@ -128,6 +179,7 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
               <DropdownMenuItem
                 onSelect={() => {
                   setAction("remove")
+                  setError("")
                   setOpen(true)
                 }}
               >
@@ -157,7 +209,7 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
               {action === "add" ? "Add Stock (Restock)" : "Record Usage"} - {item.name}
             </DialogTitle>
             <DialogDescription>
-              Current quantity: {item.quantity} {item.unit}
+              Current quantity: {Math.max(0, item.quantity)} {item.unit}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -181,6 +233,11 @@ export function InventoryActions({ item, isAdmin }: { item: Item; isAdmin: boole
                 placeholder={action === "add" ? "e.g., Supplier: ABC Company" : "e.g., Used for Room 205"}
               />
             </div>
+            {error && (
+              <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
+                {error}
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>

@@ -1,20 +1,23 @@
-import { createClient } from "@/lib/utils/supabase/server"
+import { getServerAuth } from "@/lib/utils/supabase/server"
 import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { AuthStatus } from "@/components/auth-status"
-import { Package, BarChart3, ClipboardList } from "lucide-react"
+import { Package, BarChart3, ClipboardList, Calendar } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
 type NavHeaderProps = {
   userEmail: string
-  activePage: "dashboard" | "inventory" | "analytics"
+  activePage: "dashboard" | "inventory" | "analytics" | "monthly-reports"
 }
 
 export async function NavHeader({ userEmail, activePage }: NavHeaderProps) {
-  const supabase = createClient(await cookies())
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  const cookieStore = await cookies()
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
+
+  if (!user) {
+    redirect("/login")
+  }
 
   let userRole = "staff"
   if (user) {
@@ -54,6 +57,14 @@ export async function NavHeader({ userEmail, activePage }: NavHeaderProps) {
                   Analytics
                 </Button>
               </Link>
+              {userRole === "admin" ? (
+                <Link href="/monthly-reports">
+                  <Button variant="ghost" size="sm" className={activePage === "monthly-reports" ? "bg-accent" : ""}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Monthly Reports
+                  </Button>
+                </Link>
+              ) : null}
             </nav>
           </div>
           <AuthStatus userEmail={userEmail} userRole={userRole} />

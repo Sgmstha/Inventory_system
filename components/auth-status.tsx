@@ -8,9 +8,9 @@ import { LogOut, Shield, User } from "lucide-react"
 
 export function AuthStatus({ userEmail, userRole }: { userEmail: string; userRole: string }) {
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSignOut = async () => {
+    const supabase = createClient()
     await supabase.auth.signOut()
     router.push("/login")
     router.refresh()
