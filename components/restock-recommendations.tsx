@@ -75,15 +75,19 @@ export async function RestockRecommendations() {
     const diffDays = Math.ceil((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
     if (diffDays <= 0) {
-      return "Out of stock"
+      return "Likely stockout soon"
+    }
+
+    if (diffDays === 1) {
+      return "About 1 day"
     }
 
     if (diffDays <= 7) {
-      return `less than ${diffDays} days`
+      return `About ${diffDays} days`
     }
 
     const weeks = Math.ceil(diffDays / 7)
-    return `${weeks} week${weeks === 1 ? "" : "s"} remaining`
+    return `About ${weeks} week${weeks === 1 ? "" : "s"}`
   }
 
   return (
@@ -116,6 +120,9 @@ export async function RestockRecommendations() {
               {sortedRecommendations.map((rec: any) => {
                 const itemId = rec.item_id ?? rec.item?.id ?? rec.item?.name
                 const itemName = rec.item?.name ?? rec.item_name ?? "Unknown item"
+                const currentStock = Math.max(0, Number(rec.item?.quantity ?? rec.quantity) || 0)
+                const reorderPoint = Math.max(0, Number(rec.dynamic_reorder_point ?? rec.item?.reorder_point ?? 0) || 0)
+                const recommendedQuantity = Math.max(0, Number(rec.recommended_reorder_quantity ?? rec.recommended_quantity) || 0)
                 return (
                   <TableRow key={rec.id}>
                     <TableCell className="font-medium">
@@ -123,13 +130,13 @@ export async function RestockRecommendations() {
                     </TableCell>
                     <TableCell>{rec.item?.category ?? rec.category}</TableCell>
                     <TableCell>
-                      {rec.item?.quantity ?? rec.quantity} {rec.item?.unit ?? rec.unit}
+                      {currentStock} {rec.item?.unit ?? rec.unit}
                     </TableCell>
                     <TableCell>
-                      {rec.dynamic_reorder_point ?? rec.item.reorder_point} {rec.item.unit}
+                      {reorderPoint} {rec.item?.unit ?? rec.unit}
                     </TableCell>
                     <TableCell className="font-medium text-blue-600">
-                      {rec.recommended_reorder_quantity ?? rec.recommended_quantity} {rec.item.unit}
+                      {recommendedQuantity} {rec.item?.unit ?? rec.unit}
                     </TableCell>
                     <TableCell>
                       <Badge variant={urgencyColors[rec.urgency as keyof typeof urgencyColors]}>

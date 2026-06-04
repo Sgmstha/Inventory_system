@@ -13,9 +13,11 @@ export async function DashboardStats() {
     supabase.from("restock_recommendations").select("*").eq("status", "pending"),
   ])
 
-  const lowStockItems = allItems?.filter((item) => item.quantity < item.reorder_point).length || 0
+  const lowStockItems =
+    allItems?.filter((item) => Math.max(0, Number(item.quantity) || 0) < Number(item.reorder_point || 0)).length || 0
 
-  const totalValue = allItems?.reduce((sum, item) => sum + item.quantity * item.unit_cost, 0) || 0
+  const totalValue =
+    allItems?.reduce((sum, item) => sum + Math.max(0, Number(item.quantity) || 0) * Number(item.unit_cost || 0), 0) || 0
 
   const stats = [
     {

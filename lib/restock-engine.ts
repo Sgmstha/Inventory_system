@@ -68,10 +68,14 @@ function predictStockoutDate(quantity: number, avgDailyUsage: number) {
     return { daysUntilStockout: Number.POSITIVE_INFINITY, predictedStockoutDate: null }
   }
 
-  const daysUntilStockout = quantity / avgDailyUsage
-  if (!Number.isFinite(daysUntilStockout) || daysUntilStockout <= 0) {
+  const rawDaysUntilStockout = quantity / avgDailyUsage
+  if (!Number.isFinite(rawDaysUntilStockout) || rawDaysUntilStockout <= 0) {
     return { daysUntilStockout: Number.POSITIVE_INFINITY, predictedStockoutDate: null }
   }
+
+  // Round up to a conservative whole-day estimate so the UI never presents
+  // a near-zero prediction as if it were a precise same-day event.
+  const daysUntilStockout = Math.max(1, Math.ceil(rawDaysUntilStockout))
 
   const predictedStockoutDate = new Date(Date.now() + daysUntilStockout * 24 * 60 * 60 * 1000)
     .toISOString()
@@ -189,7 +193,7 @@ export async function analyzeInventory(cookieStore?: CookieStore) {
       .order("transaction_date", { ascending: true })
 
     if (!transactionsError && transactions) {
-      transactions.forEach((transaction) => {
+      transactions.forEach((transaction: { transaction_date: string; quantity: number }) => {
         const date = new Date(transaction.transaction_date).toISOString().split("T")[0]
         const currentUsage = dailyUsageMap.get(date) || 0
         dailyUsageMap.set(date, currentUsage + Math.abs(transaction.quantity))
