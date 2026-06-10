@@ -8,19 +8,22 @@ import { RestockAlgorithmExplainer } from "@/components/restock-algorithm-explai
 
 export default async function AnalyticsPage() {
   const cookieStore = await cookies()
-  const { supabase, data: { user } } = await getServerAuth(cookieStore)
-
-  if (!user) {
-    redirect("/login")
-  }
-
+  
+  // RESEARCH MODE: Direct access without login (commented out auth check)
+  // const { supabase, data: { user } } = await getServerAuth(cookieStore)
+  // if (!user) {
+  //   redirect("/login")
+  // }
+  // const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
+  // let userRole = profile?.role || "staff"
+  
+  // Demo mode for research
+  const userEmail = "research@inventory-system.local"
   let userRole = "staff"
-  const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
-  userRole = profile?.role || "staff"
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={user.email!} activePage="analytics" />
+      <NavHeader userEmail={userEmail} activePage="analytics" isResearchMode={true} userRole={userRole} />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">

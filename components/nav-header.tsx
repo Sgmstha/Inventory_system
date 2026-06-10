@@ -9,21 +9,13 @@ import { Button } from "@/components/ui/button"
 type NavHeaderProps = {
   userEmail: string
   activePage: "dashboard" | "inventory" | "analytics" | "monthly-reports"
+  isResearchMode?: boolean
+  userRole?: string
 }
 
-export async function NavHeader({ userEmail, activePage }: NavHeaderProps) {
-  const cookieStore = await cookies()
-  const { supabase, data: { user } } = await getServerAuth(cookieStore)
-
-  if (!user) {
-    redirect("/login")
-  }
-
-  let userRole = "staff"
-  if (user) {
-    const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
-    userRole = profile?.role || "staff"
-  }
+export async function NavHeader({ userEmail, activePage, isResearchMode = true, userRole: initialUserRole }: NavHeaderProps) {
+  // RESEARCH MODE: Always skip auth checks for research/testing
+  let userRole = initialUserRole || "staff"
 
   return (
     <header className="sticky top-0 z-10 border-b bg-background shadow-sm">
@@ -67,7 +59,7 @@ export async function NavHeader({ userEmail, activePage }: NavHeaderProps) {
               ) : null}
             </nav>
           </div>
-          <AuthStatus userEmail={userEmail} userRole={userRole} />
+          <AuthStatus userEmail={userEmail} userRole={userRole} isResearchMode={isResearchMode} />
         </div>
       </div>
     </header>
