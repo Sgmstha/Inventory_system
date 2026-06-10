@@ -15,7 +15,7 @@ type NavHeaderProps = {
 
 export async function NavHeader({ userEmail, activePage, isResearchMode = true, userRole: initialUserRole }: NavHeaderProps) {
   // RESEARCH MODE: Always skip auth checks for research/testing
-  let userRole = initialUserRole || "staff"
+  let userRole = initialUserRole || "admin"
 
   return (
     <header className="sticky top-0 z-10 border-b bg-background shadow-sm">

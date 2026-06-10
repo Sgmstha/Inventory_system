@@ -5,7 +5,7 @@ import { NavHeader } from "@/components/nav-header"
 import { DashboardStats } from "@/components/dashboard-stats"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { UsageTrendsChart } from "@/components/usage-trends-chart"
-import { RoleSelectorCard } from "@/components/role-selector-card"
+
 
 export default async function DashboardPage() {
   const cookieStore = await cookies()
@@ -21,7 +21,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={userEmail} activePage="dashboard" isResearchMode={true} userRole="staff" />
+      <NavHeader userEmail={userEmail} activePage="dashboard" isResearchMode={true} userRole="admin" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
@@ -30,7 +30,7 @@ export default async function DashboardPage() {
             <p className="text-muted-foreground">Quick overview of your inventory status and alerts</p>
           </div>
 
-          <RoleSelectorCard />
+
 
           <DashboardStats />
 

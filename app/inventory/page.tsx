@@ -24,7 +24,7 @@ export default async function InventoryPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={userEmail} activePage="inventory" isResearchMode={true} userRole="staff" />
+      <NavHeader userEmail={userEmail} activePage="inventory" isResearchMode={true} userRole="admin" />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">

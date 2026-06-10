@@ -19,7 +19,7 @@ export default async function AnalyticsPage() {
   
   // Demo mode for research
   const userEmail = "research@inventory-system.local"
-  let userRole = "staff"
+  let userRole = "admin"
 
   return (
     <div className="min-h-screen bg-background">
