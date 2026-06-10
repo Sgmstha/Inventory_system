@@ -6,11 +6,13 @@ import { NextResponse } from "next/server"
 export async function POST() {
   try {
     const cookieStore = await cookies()
-    const { supabase, data: { user } } = await getServerAuth(cookieStore)
+    const { supabase } = await getServerAuth(cookieStore)
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
-    }
+    // RESEARCH MODE: Skip auth check (commented out for direct access)
+    // const { supabase, data: { user } } = await getServerAuth(cookieStore)
+    // if (!user) {
+    //   return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    // }
 
     // Generate recommendations
     const recommendations = await generateRecommendations(cookieStore)
