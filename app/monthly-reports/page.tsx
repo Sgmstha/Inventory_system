@@ -16,12 +16,17 @@ import { formatNPR } from "@/lib/utils"
 export default async function MonthlyReportsPage() {
   const cookieStore = await cookies()
   
-  // RESEARCH MODE: Get supabase client but skip auth checks
-  const { supabase } = await getServerAuth(cookieStore)
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
+  if (!user) {
+    redirect("/login")
+  }
+  const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
+  const userRole = profile?.role || "staff"
+  if (userRole !== "admin") {
+    redirect("/dashboard")
+  }
   
-  // Demo mode for research - allow access
-  const userEmail = "research@inventory-system.local"
-  const userRole = "admin"
+  const userEmail = user.email || ""
 
   const startDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
   const startDateString = startDate.toISOString().split("T")[0]
@@ -98,7 +103,7 @@ export default async function MonthlyReportsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={userEmail} activePage="monthly-reports" isResearchMode={true} userRole={userRole} />
+      <NavHeader userEmail={userEmail} activePage="monthly-reports" userRole={userRole} />
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">

@@ -7,22 +7,20 @@ import { InventoryForm } from "@/components/inventory-form"
 export default async function AddInventoryPage() {
   const cookieStore = await cookies()
   
-  // RESEARCH MODE: Direct access without login (commented out auth check)
-  // const { supabase, data: { user } } = await getServerAuth(cookieStore)
-  // if (!user) {
-  //   redirect("/login")
-  // }
-  // const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
-  // if (profile?.role !== "admin") {
-  //   redirect("/inventory")
-  // }
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
+  if (!user) {
+    redirect("/login")
+  }
+  const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", user.id).single()
+  if (profile?.role !== "admin") {
+    redirect("/inventory")
+  }
   
-  // Demo mode for research
-  const userEmail = "research@inventory-system.local"
+  const userEmail = user.email || ""
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={userEmail} activePage="inventory" isResearchMode={true} userRole="admin" />
+      <NavHeader userEmail={userEmail} activePage="inventory" userRole="admin" />
 
       <main className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">

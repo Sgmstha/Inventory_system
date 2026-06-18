@@ -9,13 +9,11 @@ import { Button } from "@/components/ui/button"
 type NavHeaderProps = {
   userEmail: string
   activePage: "dashboard" | "inventory" | "analytics" | "monthly-reports"
-  isResearchMode?: boolean
   userRole?: string
 }
 
-export async function NavHeader({ userEmail, activePage, isResearchMode = true, userRole: initialUserRole }: NavHeaderProps) {
-  // RESEARCH MODE: Always skip auth checks for research/testing
-  let userRole = initialUserRole || "admin"
+export async function NavHeader({ userEmail, activePage, userRole: initialUserRole }: NavHeaderProps) {
+  let userRole = initialUserRole || "staff"
 
   return (
     <header className="sticky top-0 z-10 border-b bg-background shadow-sm">
@@ -59,7 +57,7 @@ export async function NavHeader({ userEmail, activePage, isResearchMode = true, 
               ) : null}
             </nav>
           </div>
-          <AuthStatus userEmail={userEmail} userRole={userRole} isResearchMode={isResearchMode} />
+          <AuthStatus userEmail={userEmail} userRole={userRole} />
         </div>
       </div>
     </header>

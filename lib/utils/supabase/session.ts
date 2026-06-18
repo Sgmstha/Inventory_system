@@ -48,24 +48,18 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // RESEARCH MODE: Allow all paths without authentication
   const isPublicPath =
     request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/auth') ||
     request.nextUrl.pathname.startsWith('/api/seed-historical-data') ||
-    request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/inventory') ||
-    request.nextUrl.pathname.startsWith('/analytics') ||
-    request.nextUrl.pathname.startsWith('/monthly-reports') ||
     request.nextUrl.pathname === '/'
 
-  // Research mode: Comment out the redirect logic
-  // if (!user && !isPublicPath) {
-  //   // no user, potentially respond by redirecting the user to the login page
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  if (!user && !isPublicPath) {
+    // no user, redirect to the login page
+    const url = request.nextUrl.clone()
+    url.pathname = '/login'
+    return NextResponse.redirect(url)
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:

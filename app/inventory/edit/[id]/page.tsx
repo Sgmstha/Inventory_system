@@ -7,11 +7,12 @@ import { InventoryForm } from "@/components/inventory-form"
 export default async function EditInventoryPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies()
   
-  // RESEARCH MODE: Get supabase client but skip auth checks
-  const { supabase } = await getServerAuth(cookieStore)
+  const { supabase, data: { user } } = await getServerAuth(cookieStore)
+  if (!user) {
+    redirect("/login")
+  }
 
-  // Demo mode for research
-  const userEmail = "research@inventory-system.local"
+  const userEmail = user.email || ""
 
   const { id } = await params
 
@@ -24,7 +25,7 @@ export default async function EditInventoryPage({ params }: { params: Promise<{ 
 
   return (
     <div className="min-h-screen bg-background">
-      <NavHeader userEmail={userEmail} activePage="inventory" isResearchMode={true} userRole="admin" />
+      <NavHeader userEmail={userEmail} activePage="inventory" userRole="admin" />
 
       <main className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-8">
         <div className="space-y-8">
